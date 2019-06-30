@@ -38,12 +38,13 @@ var hero_restore_ed=false
 var mob_restore_ed=false
 
 func addLine():
-	for i in range(labels.size()-1, 0, -1):
-		labels[i].text=labels[i-1].text
-	labels[0].text=""
+	$RTL.newline()
+	
+	if $RTL.get_line_count() > 10:
+		$RTL.remove_line(0)
 
 func addText(s):
-	labels[0].text+=s
+	$RTL.add_text(s)
 
 func openDoor():
 	addText("--- "+hero.name()+" ouvre une porte("+str(lvl)+").")
@@ -57,7 +58,11 @@ func apparation():
 	addText("Un "+mob.name()+" apparait !")
 
 func writeDamage(i):
-	addText(" inflige "+str(i)+" dégat(s).")
+	addText(" inflige ")
+	$RTL.push_color(Color.rosybrown)
+	addText(str(i))
+	$RTL.pop()
+	addText(" dégat(s).")
 
 func checkIni():
 	if hero.ini<mob.ini:
