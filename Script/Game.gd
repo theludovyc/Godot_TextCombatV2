@@ -17,12 +17,14 @@ var mob=Monster.new()
 var labels
 var labels_index=0
 
-enum {PLAYER_ATTACK}
+enum {PLAYER_ATTACK, TREASURE}
 
-var state=0
+var state:=0
 
-var player_attack=false
-var monster_attack=false
+var turn_ini:int
+
+var player_attack:bool
+var monster_attack:bool
 
 var mob_doAttack=false
 var hero_doAttack=false
@@ -40,7 +42,7 @@ var hero_key3=false
 
 var treasure
 
-var lvl=0
+var lvl:=0
 
 var hero_def=0
 
@@ -86,6 +88,9 @@ func aide_addText(s):
 
 func help_setText(s):
 	$Label11.text=s
+	
+func help_addText(s):
+	$Label11.text+=s
 
 func help_setVisibiliy(b):
 	$Label11.visible=b
@@ -98,14 +103,6 @@ func setKeys(b0, b1, b2, b3):
 	hero_key1=b1
 	hero_key2=b2
 	hero_key3=b3
-
-func newTreasure():
-	var id=0
-
-	if lvl%10!=0:
-		id=Helper.rand_between(0, items.size()-1)
-
-	treasure=items[id].new(lvl)
 
 func writeDamage(i):
 	buffer_addText("inflige "+str(i)+" dégat(s).")
@@ -131,33 +128,30 @@ func monsterAttack():
 			else:
 				return false
 	
-	buffer_addText(mob.name()+" rate son attaque.")
+	buffer_addText(" rate son attaque.")
 	return false
 
 func checkIni():
-	var b:=false
-	
 	if hero.ini>mob.ini:
 		buffer_addLine(hero.name())
-		b=true
+		turn_ini=1
 	else:
 		buffer_addLine(mob.name())
+		turn_ini=2
 		
 	buffer_addText(" attaque en premier.")
-	
-	return b
 
 func todo_newTurn():
 	player_attack=false
 	monster_attack=false
 	
-	if !checkIni():
-		if monsterAttack():
-			print("PLAYER_DEATH")
+	if turn_ini==0:
+		checkIni()
+		
+	if turn_ini==2 and monsterAttack():
+		print("PLAYER_DEATH")
 	
 	state=PLAYER_ATTACK
-	
-	print(state)
 
 func apparation():
 	if(lvl%10==0):
@@ -172,6 +166,9 @@ func openDoor():
 
 func todo_start():
 	lvl+=1
+	
+	turn_ini=0
+	
 	openDoor()
 	apparation()
 	todo_newTurn()
@@ -234,16 +231,6 @@ func todo():
 
 		9:
 			addLine()
-			newTreasure()
-
-			buffer_addText("C'est ")
-
-			if treasure.genre:
-				buffer_addText("un ")
-			else:
-				buffer_addText("une ")
-
-			buffer_addText(treasure.name(hero)+" !")
 
 			if treasure.equip:
 				aide_setText("A. Equiper ")
@@ -260,21 +247,7 @@ func todo():
 		10:
 			hero.pvMax+=1
 
-			if !hero_key0:
-				addLine()
-				treasure.use(hero)
-
-				buffer_addText(hero.name)
-
-				if treasure.equip:
-					buffer_addText(" s'en equipe.")
-				else:
-					buffer_addText(" l'utilise.")
-
-				treasure=null
-			elif !hero_key1:
-				addLine()
-				buffer_addText(hero.name+" continu son chemin.")
+			
 
 			mob_doAttack=false
 			hero_doAttack=false
@@ -354,6 +327,14 @@ func _ready():
 	
 	addText()
 
+func newTreasure():
+	var id=0
+
+	if lvl%10!=0:
+		id=Helper.rand_between(0, items.size()-1)
+
+	treasure=items[id].new(lvl)
+
 func playerAttack():
 	player_attack=true
 
@@ -370,7 +351,7 @@ func playerAttack():
 			#malusDef()
 			damage*=2
 
-		buffer_addText(hero.name())
+		buffer_addLine(hero.name())
 		writeDamage(damage)
 
 		if mob.remPv(damage):
@@ -378,7 +359,7 @@ func playerAttack():
 		else:
 			return false
 
-	buffer_addText(hero.name()+" rate son attaque.")
+	buffer_addLine(hero.name()+" rate son attaque.")
 	return false
 
 func todo1():
@@ -390,7 +371,50 @@ func todo1():
 					#MONSTER_DEATH
 					buffer_addLine(mob.name()+" est mort.")
 					buffer_addLine(hero.name()+" a trouvé un trésor!")
-					pass
+					
+					newTreasure()
+
+					buffer_addLine("C'est ")
+
+					if treasure.genre:
+						buffer_addText("un ")
+					else:
+						buffer_addText("une ")
+
+					buffer_addText(treasure.name(hero)+" !")
+					
+					state = TREASURE
+				else:
+					if monster_attack or !monsterAttack():
+						buffer_addLine("- Nouveau tour");
+						todo_newTurn();
+					else:
+						print("PLAYER DEATH")
+				
+				addLine()
+				addText()
+				
+			TREASURE:
+				buffer_addLine(hero.name())
+				
+				if player_key==0 :
+					if treasure.equip:
+						buffer_addText(" s'en equipe.")
+					else:
+						buffer_addText(" l'utilise.")
+					treasure.use(hero)
+				else:
+					buffer_addText(" continu son chemin.")
+
+				treasure=null
+
+				hero.pvMax +=1
+
+				todo_start();
+				
+				addLine()
+				addText()
+				pass
 
 func todo_help():
 	match state:
@@ -399,6 +423,17 @@ func todo_help():
 			help_setVisibiliy(true)
 			player_key=4
 			player_keyMax=3
+			
+		TREASURE:
+			if treasure.equip:
+				help_setText("a.Equiper ")
+			else:
+				help_setText("a.Utiliser ")
+				
+			help_addText("z.Laisser")
+			help_setVisibiliy(true)
+			player_key=3
+			player_keyMax=2
 	pass
 
 func _process(delta):

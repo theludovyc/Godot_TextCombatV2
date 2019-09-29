@@ -38,16 +38,16 @@ func setToArmMax():
 	arm=armMax
 
 func remPv(i):
-	if i>(arm+pv):
+	if i>=(arm+pv):
 		pv=0
 		arm=0
 		return true
-	elif arm>i:
-		arm-=i
+	elif i==arm:
+		arm=0
 		return false
 	i-=arm
 	arm=0
-	if i>pv:
+	if i>=pv:
 		pv=0
 		return true
 	pv-=i
