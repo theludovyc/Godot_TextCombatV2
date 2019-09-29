@@ -14,10 +14,7 @@ var string_buffer = []
 var hero=Player.new()
 var mob=Monster.new()
 
-var labels
-var labels_index=0
-
-enum {PLAYER_ATTACK, TREASURE}
+enum {PLAYER_ATTACK, TREASURE, PLAYER_DEATH, END}
 
 var state:=0
 
@@ -26,28 +23,14 @@ var turn_ini:int
 var player_attack:bool
 var monster_attack:bool
 
-var mob_doAttack=false
-var hero_doAttack=false
-
-var heroTurn=false
-
 var player_key:int
 var player_keyMax:int
-
-var hero_press=false
-var hero_key0=false
-var hero_key1=false
-var hero_key2=false
-var hero_key3=false
 
 var treasure
 
 var lvl:=0
 
 var hero_def=0
-
-var hero_restore_ed=false
-var mob_restore_ed=false
 
 func addLine():
 	$RTL.newline()
@@ -98,11 +81,9 @@ func help_setVisibiliy(b):
 func aide_setText(s):
 	$Label11.text=s
 
-func setKeys(b0, b1, b2, b3):
-	hero_key0=b0
-	hero_key1=b1
-	hero_key2=b2
-	hero_key3=b3
+func playerDeath():
+	buffer_addLine("Vous êtes mort!")
+	state=PLAYER_DEATH
 
 func writeDamage(i):
 	buffer_addText("inflige "+str(i)+" dégat(s).")
@@ -149,7 +130,8 @@ func todo_newTurn():
 		checkIni()
 		
 	if turn_ini==2 and monsterAttack():
-		print("PLAYER_DEATH")
+		playerDeath()
+		return
 	
 	state=PLAYER_ATTACK
 
@@ -173,155 +155,8 @@ func todo_start():
 	apparation()
 	todo_newTurn()
 
-func todo():
-	match state:
-		0:
-			addLine()
-			openDoor()
-			state+=1
-		1:
-			addLine()
-			apparation()
-			state+=1
-		2:
-			addLine()
-			checkIni()
-			state+=1
-		3:
-			if mob_doAttack and hero_doAttack:
-				state+=3
-		4:
-			disableDef()
-			
-			addLine()
-			buffer_addText(mob.name+" est mort.")
-
-			if(lvl==100):
-				state=16
-				return
-			
-			state+=3
-
-		5:
-			addLine()
-			buffer_addText(hero.name+" est mort.")
-			state+=3
-
-		6:
-			addLine()
-			mob_doAttack=false
-			hero_doAttack=false
-			buffer_addText("- Nouveau tour")
-			state-=3
-
-		7:
-			addLine()
-			buffer_addText("-- "+hero.name()+" a trouvé un trésor.")
-			state+=2
-
-		8:
-			addLine()
-			buffer_addText("Fin de la partie, merci d'avoir joué !")
-			aide_setText("A. Prier Z. Abandonner")
-
-			hero_press=true
-			setKeys(true, true, false, false)
-
-			state+=3
-
-		9:
-			addLine()
-
-			if treasure.equip:
-				aide_setText("A. Equiper ")
-			else:
-				aide_setText("A. Utiliser ")
-
-			aide_addText("Z. Laisser")
-
-			hero_press=true
-			setKeys(true, true, false, false)
-
-			state+=1
-
-		10:
-			hero.pvMax+=1
-
-			
-
-			mob_doAttack=false
-			hero_doAttack=false
-			hero.setToArmMax()
-			lvl+=1
-			state=0
-
-		11:
-			if !hero_key0:
-				addLine()
-				buffer_addText("Un ange a entendu votre prière...")
-				state+=1
-			elif !hero_key1:
-				get_tree().quit()
-
-		12:
-			addLine()
-			buffer_addText("Il accepte de vous réanimer...")
-			state+=1
-
-		13:
-			addLine()
-			buffer_addText("En échange de votre équipement...")
-
-			state+=1
-
-		14:
-			addLine()
-			buffer_addText("Et si vous prenez un nouveau départ...")
-
-			aide_setText("A. Accepter Z. Refuser")
-
-			hero_press=true
-			setKeys(true, true, false, false)
-
-			state+=1
-
-		15:
-			if !hero_key0:
-				randomize()
-
-				lvl=1
-
-				hero._init()
-
-				addLine()
-				openDoor()
-
-				state=1
-			elif !hero_key1:
-				get_tree().quit()
-
-		16:
-			addLine()
-			buffer_addText("Vous êtes venu à bout du dernier Boss...")
-			state+=1
-
-		17:
-			addLine()
-			buffer_addText("Félicitation !!!")
-			state+=1
-
-		18:
-			addLine()
-			buffer_addText("Fin de la partie, merci d'avoir joué !")
-			aide_setText("A. Recommencer Z. Quitter")
-			hero_press=true
-			setKeys(true, true, false, false)
-			state=15
-
 func _ready():
 	randomize()
-
-	labels=[$Label10, $Label9, $Label8, $Label7, $Label6, $Label5, $Label4, $Label3, $Label2, $Label]
 
 	todo_start()
 	
@@ -362,7 +197,7 @@ func playerAttack():
 	buffer_addLine(hero.name()+" rate son attaque.")
 	return false
 
-func todo1():
+func todo():
 	if player_key<=player_keyMax:
 		help_setVisibiliy(false)
 		match state:
@@ -370,6 +205,14 @@ func todo1():
 				if playerAttack():
 					#MONSTER_DEATH
 					buffer_addLine(mob.name()+" est mort.")
+					
+					if lvl==100:
+						buffer_addLine("Vous êtes venu à bout du dernier Boss...")
+						buffer_addLine("Félicitation !!!")
+						buffer_addLine("Fin de la partie, merci d'avoir joué !")
+						state=END
+						return
+					
 					buffer_addLine(hero.name()+" a trouvé un trésor!")
 					
 					newTreasure()
@@ -389,7 +232,7 @@ func todo1():
 						buffer_addLine("- Nouveau tour");
 						todo_newTurn();
 					else:
-						print("PLAYER DEATH")
+						playerDeath()
 				
 				addLine()
 				addText()
@@ -414,15 +257,45 @@ func todo1():
 				
 				addLine()
 				addText()
-				pass
+				
+			PLAYER_DEATH:
+				if player_key==0:
+					buffer_addLine("Un ange a entendu votre prière...")
+					buffer_addLine("Il accepte de vous réanimer...")
+					buffer_addLine("En échange de votre équipement...")
+					buffer_addLine("Et si vous prenez un nouveau départ...")
+					
+					randomize()
+					lvl=0
+					hero._init()
+					
+					todo_start()
+					
+					addLine()
+					addText()
+					return
+				get_tree().quit()
+					
+			END:
+				if player_key==0:
+					randomize()
+					lvl=0
+					hero._init()
+					
+					todo_start()
+					
+					addLine()
+					addText()
+					return
+				get_tree().quit()
 
 func todo_help():
 	match state:
 		PLAYER_ATTACK:
 			help_setText("a.Atk z.Atk++ e.Def")
 			help_setVisibiliy(true)
-			player_key=4
-			player_keyMax=3
+			player_key=3
+			player_keyMax=2
 			
 		TREASURE:
 			if treasure.equip:
@@ -432,9 +305,20 @@ func todo_help():
 				
 			help_addText("z.Laisser")
 			help_setVisibiliy(true)
+			player_key=2
+			player_keyMax=1
+			
+		PLAYER_DEATH:
+			help_setText("a.Prier z.Abandonner")
+			help_setVisibiliy(true)
 			player_key=3
 			player_keyMax=2
-	pass
+			
+		END:
+			help_setText("a.Recommencer z.Quitter")
+			help_setVisibiliy(true)
+			player_key=3
+			player_keyMax=2
 
 func _process(delta):
 	if Input.is_action_just_pressed("ui_cancel"):
@@ -450,14 +334,14 @@ func _process(delta):
 	else:
 		if Input.is_action_just_pressed("MyKey_0"):
 			player_key=0
-			todo1()
+			todo()
 		elif Input.is_action_just_pressed("MyKey_1"):
 			player_key=1
-			todo1()
+			todo()
 		elif Input.is_action_just_pressed("MyKey_2"):
 			player_key=2
-			todo1()
+			todo()
 		elif Input.is_action_just_pressed("MyKey_3"):
 			player_key=3
-			todo1()
+			todo()
 	pass
