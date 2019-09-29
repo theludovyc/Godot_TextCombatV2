@@ -9,18 +9,28 @@ preload("ItemEpee.gd"),
 preload("ItemCeinture.gd"),
 preload("ItemBotte.gd")]
 
+var string_buffer = []
+
 var hero=Player.new()
 var mob=Monster.new()
 
 var labels
 var labels_index=0
 
+enum {PLAYER_ATTACK}
+
 var state=0
+
+var player_attack=false
+var monster_attack=false
 
 var mob_doAttack=false
 var hero_doAttack=false
 
 var heroTurn=false
+
+var player_key:int
+var player_keyMax:int
 
 var hero_press=false
 var hero_key0=false
@@ -30,7 +40,7 @@ var hero_key3=false
 
 var treasure
 
-var lvl=1
+var lvl=0
 
 var hero_def=0
 
@@ -43,38 +53,14 @@ func addLine():
 	if $RTL.get_line_count() > 10:
 		$RTL.remove_line(0)
 
-func addText(s):
-	$RTL.add_text(s)
+func addText():
+	$RTL.add_text(string_buffer.pop_back())
 
-func openDoor():
-	addText("--- "+hero.name()+" ouvre une porte("+str(lvl)+").")
-
-func apparation():
-	if(lvl%10==0):
-		mob.initBoss(lvl)
-	else:
-		mob.initMonster(lvl)
-
-	addText("Un "+mob.name()+" apparait !")
-
-func writeDamage(i):
-	addText(" inflige ")
-	$RTL.push_color(Color.rosybrown)
-	addText(str(i))
-	$RTL.pop()
-	addText(" dégat(s).")
-
-func checkIni():
-	if hero.ini<mob.ini:
-		addText(hero.name())
-		heroTurn=true
-		aide_setText("A. Def Z. Atk++ E. Atk")
-		hero_press=true
-		setKeys(true, true, true, false)
-	else:
-		addText(mob.name())
-		heroTurn=false
-	addText(" attaque en premier.")
+func buffer_addLine(s):
+	string_buffer.push_front(s)
+	
+func buffer_addText(s):
+	string_buffer[0] += s
 
 func bonusDef():
 	hero.cc+=0.1
@@ -98,6 +84,12 @@ func disableDef():
 func aide_addText(s):
 	$Label11.text+=s
 
+func help_setText(s):
+	$Label11.text=s
+
+func help_setVisibiliy(b):
+	$Label11.visible=b
+
 func aide_setText(s):
 	$Label11.text=s
 
@@ -115,6 +107,75 @@ func newTreasure():
 
 	treasure=items[id].new(lvl)
 
+func writeDamage(i):
+	buffer_addText("inflige "+str(i)+" dégat(s).")
+
+func monsterAttack():
+	monster_attack=true
+
+	buffer_addLine(mob.name())
+
+	if mob.testAttack():
+		buffer_addText(" attaque, ")
+
+		if hero.testAttack():
+			buffer_addText("mais "+hero.name()+" se défend !")
+			return false
+		else:
+			var dam = mob.attack()
+			buffer_addText("et ")
+			writeDamage(dam)
+
+			if hero.remPv(dam):
+				return true
+			else:
+				return false
+	
+	buffer_addText(mob.name()+" rate son attaque.")
+	return false
+
+func checkIni():
+	var b:=false
+	
+	if hero.ini>mob.ini:
+		buffer_addLine(hero.name())
+		b=true
+	else:
+		buffer_addLine(mob.name())
+		
+	buffer_addText(" attaque en premier.")
+	
+	return b
+
+func todo_newTurn():
+	player_attack=false
+	monster_attack=false
+	
+	if !checkIni():
+		if monsterAttack():
+			print("PLAYER_DEATH")
+	
+	state=PLAYER_ATTACK
+	
+	print(state)
+
+func apparation():
+	if(lvl%10==0):
+		mob.initBoss(lvl)
+	else:
+		mob.initMonster(lvl)
+
+	buffer_addLine("Un "+mob.name()+" apparait !")
+	
+func openDoor():
+	buffer_addLine("--- "+hero.name()+" ouvre une porte("+str(lvl)+").")
+
+func todo_start():
+	lvl+=1
+	openDoor()
+	apparation()
+	todo_newTurn()
+
 func todo():
 	match state:
 		0:
@@ -130,69 +191,13 @@ func todo():
 			checkIni()
 			state+=1
 		3:
-			addLine()
-			if !heroTurn:
-				mob_doAttack=true
-
-				if mob.testAttack():
-					addText(mob.name()+" attaque, ")
-
-					var b=true
-
-					if hero.testAttack():
-						addText("mais "+hero.name+" se défend !")
-						b=false
-
-					disableDef()
-					
-					if b:
-						addText("et ")
-						writeDamage(hero.remPv( mob.attack() ))
-
-						if hero.pv<1:
-							state+=2
-							return
-				else:
-					disableDef()
-
-					addText(mob.name()+" rate son attaque.")
-
-				heroTurn=true
-				aide_setText("A. Def Z. Atk++ E. Atk")
-				hero_press=true
-				setKeys(true, true, true, false)
-			else:
-				hero_doAttack=true
-				heroTurn=false
-
-				if !hero_key0:
-					bonusDef()
-					hero.setToArmMax()
-					addText(hero.name+" prépare sa défense.")
-				else:
-					if hero.testAttack():
-						var damage=hero.attack()
-
-						if !hero_key1:
-							malusDef()
-							damage*=2
-
-						addText(hero.name())
-						writeDamage(mob.remPv( damage ))
-
-						if mob.pv<=0:
-							state+=1
-							return
-					else:
-						addText(hero.name()+" rate son attaque.")
-
 			if mob_doAttack and hero_doAttack:
 				state+=3
 		4:
 			disableDef()
 			
 			addLine()
-			addText(mob.name+" est mort.")
+			buffer_addText(mob.name+" est mort.")
 
 			if(lvl==100):
 				state=16
@@ -202,24 +207,24 @@ func todo():
 
 		5:
 			addLine()
-			addText(hero.name+" est mort.")
+			buffer_addText(hero.name+" est mort.")
 			state+=3
 
 		6:
 			addLine()
 			mob_doAttack=false
 			hero_doAttack=false
-			addText("- Nouveau tour")
+			buffer_addText("- Nouveau tour")
 			state-=3
 
 		7:
 			addLine()
-			addText("-- "+hero.name()+" a trouvé un trésor.")
+			buffer_addText("-- "+hero.name()+" a trouvé un trésor.")
 			state+=2
 
 		8:
 			addLine()
-			addText("Fin de la partie, merci d'avoir joué !")
+			buffer_addText("Fin de la partie, merci d'avoir joué !")
 			aide_setText("A. Prier Z. Abandonner")
 
 			hero_press=true
@@ -231,14 +236,14 @@ func todo():
 			addLine()
 			newTreasure()
 
-			addText("C'est ")
+			buffer_addText("C'est ")
 
 			if treasure.genre:
-				addText("un ")
+				buffer_addText("un ")
 			else:
-				addText("une ")
+				buffer_addText("une ")
 
-			addText(treasure.name(hero)+" !")
+			buffer_addText(treasure.name(hero)+" !")
 
 			if treasure.equip:
 				aide_setText("A. Equiper ")
@@ -259,17 +264,17 @@ func todo():
 				addLine()
 				treasure.use(hero)
 
-				addText(hero.name)
+				buffer_addText(hero.name)
 
 				if treasure.equip:
-					addText(" s'en equipe.")
+					buffer_addText(" s'en equipe.")
 				else:
-					addText(" l'utilise.")
+					buffer_addText(" l'utilise.")
 
 				treasure=null
 			elif !hero_key1:
 				addLine()
-				addText(hero.name+" continu son chemin.")
+				buffer_addText(hero.name+" continu son chemin.")
 
 			mob_doAttack=false
 			hero_doAttack=false
@@ -280,25 +285,25 @@ func todo():
 		11:
 			if !hero_key0:
 				addLine()
-				addText("Un ange a entendu votre prière...")
+				buffer_addText("Un ange a entendu votre prière...")
 				state+=1
 			elif !hero_key1:
 				get_tree().quit()
 
 		12:
 			addLine()
-			addText("Il accepte de vous réanimer...")
+			buffer_addText("Il accepte de vous réanimer...")
 			state+=1
 
 		13:
 			addLine()
-			addText("En échange de votre équipement...")
+			buffer_addText("En échange de votre équipement...")
 
 			state+=1
 
 		14:
 			addLine()
-			addText("Et si vous prenez un nouveau départ...")
+			buffer_addText("Et si vous prenez un nouveau départ...")
 
 			aide_setText("A. Accepter Z. Refuser")
 
@@ -324,17 +329,17 @@ func todo():
 
 		16:
 			addLine()
-			addText("Vous êtes venu à bout du dernier Boss...")
+			buffer_addText("Vous êtes venu à bout du dernier Boss...")
 			state+=1
 
 		17:
 			addLine()
-			addText("Félicitation !!!")
+			buffer_addText("Félicitation !!!")
 			state+=1
 
 		18:
 			addLine()
-			addText("Fin de la partie, merci d'avoir joué !")
+			buffer_addText("Fin de la partie, merci d'avoir joué !")
 			aide_setText("A. Recommencer Z. Quitter")
 			hero_press=true
 			setKeys(true, true, false, false)
@@ -345,30 +350,79 @@ func _ready():
 
 	labels=[$Label10, $Label9, $Label8, $Label7, $Label6, $Label5, $Label4, $Label3, $Label2, $Label]
 
-	openDoor()
+	todo_start()
+	
+	addText()
 
-	state=1
+func playerAttack():
+	player_attack=true
+
+	if player_key==2:
+		#bonusDef()
+		hero.setToArmMax()
+		buffer_addLine(hero.name()+" prépare sa défense.")
+		return false
+		
+	if hero.testAttack():
+		var damage=hero.attack()
+
+		if player_key==1:
+			#malusDef()
+			damage*=2
+
+		buffer_addText(hero.name())
+		writeDamage(damage)
+
+		if mob.remPv(damage):
+			return true
+		else:
+			return false
+
+	buffer_addText(hero.name()+" rate son attaque.")
+	return false
+
+func todo1():
+	if player_key<=player_keyMax:
+		help_setVisibiliy(false)
+		match state:
+			PLAYER_ATTACK:
+				if playerAttack():
+					#MONSTER_DEATH
+					buffer_addLine(mob.name()+" est mort.")
+					buffer_addLine(hero.name()+" a trouvé un trésor!")
+					pass
+
+func todo_help():
+	match state:
+		PLAYER_ATTACK:
+			help_setText("a.Atk z.Atk++ e.Def")
+			help_setVisibiliy(true)
+			player_key=4
+			player_keyMax=3
+	pass
 
 func _process(delta):
 	if Input.is_action_just_pressed("ui_cancel"):
 		get_tree().quit()
 
-	if !hero_press and Input.is_action_just_pressed("ui_accept"):
-		todo()
+	if !string_buffer.empty():
+		if Input.is_action_just_pressed("ui_accept"):
+			addLine()
+			addText()
+		
+			if string_buffer.empty():
+				todo_help()
 	else:
-		if hero_key0 and Input.is_action_just_pressed("MyKey_0"):
-			hero_key0=false
-			todo()
-			aide_setText("")
-			hero_press=false
-		elif hero_key1 and Input.is_action_just_pressed("MyKey_1"):
-			hero_key1=false
-			todo()
-			aide_setText("")
-			hero_press=false
-		elif hero_key2 and Input.is_action_just_pressed("MyKey_2"):
-			hero_key2=false
-			todo()
-			aide_setText("")
-			hero_press=false
+		if Input.is_action_just_pressed("MyKey_0"):
+			player_key=0
+			todo1()
+		elif Input.is_action_just_pressed("MyKey_1"):
+			player_key=1
+			todo1()
+		elif Input.is_action_just_pressed("MyKey_2"):
+			player_key=2
+			todo1()
+		elif Input.is_action_just_pressed("MyKey_3"):
+			player_key=3
+			todo1()
 	pass

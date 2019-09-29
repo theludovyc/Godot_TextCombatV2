@@ -38,22 +38,20 @@ func setToArmMax():
 	arm=armMax
 
 func remPv(i):
-	if arm>0:
-		if i==arm:
-			arm=0
-			return 0
-		else:
-			if i>arm:
-				i-=arm
-				pv-=i
-				arm=0
-				return i
-			
-			arm-=i
-			return 0
-	
+	if i>(arm+pv):
+		pv=0
+		arm=0
+		return true
+	elif arm>i:
+		arm-=i
+		return false
+	i-=arm
+	arm=0
+	if i>pv:
+		pv=0
+		return true
 	pv-=i
-	return i
+	return false
 
 func getDifDegMaxMin():
 	return degMax-degMin
