@@ -47,25 +47,6 @@ func buffer_addLine(s):
 func buffer_addText(s):
 	string_buffer[0] += s
 
-func bonusDef():
-	hero.cc+=0.1
-	hero_def=1
-
-func malusDef():
-	hero.cc-=0.4
-	hero_def=2
-
-func disableDef():
-	match hero_def:
-		0:
-			return
-		1:
-			hero.cc-=0.1
-			hero_def=0
-		2:
-			hero.cc+=0.4
-			hero_def=0
-
 func aide_addText(s):
 	$Label11.text+=s
 
@@ -88,29 +69,78 @@ func playerDeath():
 func writeDamage(i):
 	buffer_addText("inflige "+str(i)+" dégat(s).")
 
-func monsterAttack():
-	monster_attack=true
-
-	buffer_addLine(mob.name())
-
-	if mob.testAttack():
+func entityAttack(a:Entity, b:Entity):
+	if a.testAttack():
 		buffer_addText(" attaque, ")
 
-		if hero.testAttack():
-			buffer_addText("mais "+hero.name()+" se défend !")
+		if b.testDef0():
+			buffer_addText("mais "+b.name()+" se défend !")
 			return false
 		else:
-			var dam = mob.attack()
+			var dam = a.getDamage()
 			buffer_addText("et ")
 			writeDamage(dam)
 
-			if hero.remPv(dam):
+			if b.remPv(dam):
 				return true
 			else:
 				return false
 	
 	buffer_addText(" rate son attaque.")
 	return false
+
+func entityStrongAttack(a:Entity, b:Entity):
+	a.remDef()
+	
+	if a.testAttack():
+		buffer_addText(" attaque, ")
+
+		if b.testDef(-1):
+			buffer_addText("mais "+b.name()+" se défend !")
+			return false
+		else:
+			var dam = a.getDamage() * 2
+			buffer_addText("et ")
+			writeDamage(dam)
+
+			if b.remPv(dam):
+				return true
+			else:
+				return false
+	
+	buffer_addText(" rate son attaque.")
+	return false
+
+func monsterTodo():
+	monster_attack=true
+
+	buffer_addLine(mob.name())
+
+	var rmob = randf()
+
+	match(mob.defLvl):
+		0:
+			if rmob <= 0.75:
+				buffer_addText(" prépare sa défense.")
+				mob.addDef()
+				return false
+			
+			return entityAttack(mob, hero)
+			
+		1:
+			if rmob <= 0.5:
+				return entityAttack(mob, hero)
+			elif rmob <= 0.75:
+				return entityStrongAttack(mob, hero)
+				
+			buffer_addText(" prépare sa défense.")
+			mob.addDef()
+			return false
+		
+		2:
+			if rmob <= 0.75:
+				return entityStrongAttack(mob, hero)
+			return entityAttack(mob, hero)
 
 func checkIni():
 	if hero.ini>mob.ini:
@@ -126,10 +156,12 @@ func todo_newTurn():
 	player_attack=false
 	monster_attack=false
 	
+	hero.defLvl = 1
+	
 	if turn_ini==0:
 		checkIni()
 		
-	if turn_ini==2 and monsterAttack():
+	if turn_ini==2 and monsterTodo():
 		playerDeath()
 		return
 	
@@ -173,29 +205,17 @@ func newTreasure():
 func playerAttack():
 	player_attack=true
 
+	buffer_addLine(hero.name())
+
 	if player_key==2:
-		#bonusDef()
-		hero.setToArmMax()
-		buffer_addLine(hero.name()+" prépare sa défense.")
+		hero.addDef()
+		buffer_addLine(" prépare sa défense.")
 		return false
-		
-	if hero.testAttack():
-		var damage=hero.attack()
+	
+	if player_key == 1:
+		return entityStrongAttack(hero, mob)
 
-		if player_key==1:
-			#malusDef()
-			damage*=2
-
-		buffer_addLine(hero.name())
-		writeDamage(damage)
-
-		if mob.remPv(damage):
-			return true
-		else:
-			return false
-
-	buffer_addLine(hero.name()+" rate son attaque.")
-	return false
+	return entityAttack(hero, mob)
 
 func todo():
 	if player_key<=player_keyMax:
@@ -228,7 +248,7 @@ func todo():
 					
 					state = TREASURE
 				else:
-					if monster_attack or !monsterAttack():
+					if monster_attack or !monsterTodo():
 						buffer_addLine("- Nouveau tour");
 						todo_newTurn();
 					else:

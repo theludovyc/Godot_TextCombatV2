@@ -1,22 +1,27 @@
-var name
+class_name Entity
+
+var name:String
 
 #point de vie
-var pv
-var pvMax
+var pv:int
+var pvMax:int
 
 #armure
-var arm
-var armMax
+var arm:int
+var armMax:int
+
+#defense
+var defLvl = 1
 
 #capacite de combat
-var cc
+var cc:float
 
 #degat
-var degMin
-var degMax
+var degMin:int
+var degMax:int
 
 #initiative
-var ini
+var ini:int
 
 func name():
 	var s=name+"("+str(pv)
@@ -53,13 +58,44 @@ func remPv(i):
 	pv-=i
 	return false
 
+func testDef0():
+	match(defLvl):
+		0:
+			return (randf() <= 0.25)
+			
+		1:
+			return (randf() <= 0.5)
+		
+		2:
+			return (randf() <= 0.75)
+
+func testDef(mod:int):
+	match(int(clamp(defLvl + mod, 0, 2 ) ) ):
+		0:
+			return (randf() <= 0.25)
+			
+		1:
+			return (randf() <= 0.5)
+		
+		2:
+			return (randf() <= 0.75)
+
+func addDef():
+	if defLvl < 2:
+		defLvl += 1
+
+func remDef():
+	if defLvl > 0:
+		defLvl -= 1
+
+func doDef():
+	addDef()
+
 func getDifDegMaxMin():
 	return degMax-degMin
 
 func testAttack():
-	if randf()<=cc:
-		return true
-	return false
+	return (randf() <= cc)
 
-func attack():
+func getDamage():
 	return Helper.rand_between(degMin, degMax)

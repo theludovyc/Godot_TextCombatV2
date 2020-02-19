@@ -123,7 +123,7 @@ func testAttack():
 		return true
 	return false
 
-func attack():
+func getDamage():
 	if fr==100:
 		return degMax
 	return Helper.rand_between(degMin, degMax)
