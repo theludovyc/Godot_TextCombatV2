@@ -24,7 +24,7 @@ func initCaracs():
 	cc=0.5
 
 	degMin=1
-	degMax=1	
+	degMax=1
 
 	ini=5
 

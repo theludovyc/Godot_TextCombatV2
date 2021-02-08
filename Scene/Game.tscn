@@ -1,16 +1,38 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://Script/Game.gd" type="Script" id=1]
 [ext_resource path="res://myTheme.tres" type="Theme" id=2]
 
+[sub_resource type="StyleBoxFlat" id=1]
+bg_color = Color( 0.47451, 0.466667, 0.447059, 1 )
+
 [node name="Game" type="Node"]
 script = ExtResource( 1 )
 
-[node name="RTL" type="RichTextLabel" parent="."]
-margin_left = 3.0
-margin_top = 3.0
-margin_right = 635.0
-margin_bottom = 339.0
+[node name="Panel" type="Panel" parent="."]
+anchor_right = 1.0
+margin_bottom = 334.0
+custom_styles/panel = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_constants/margin_right = 5
+custom_constants/margin_top = 5
+custom_constants/margin_left = 5
+custom_constants/margin_bottom = 5
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="RTL" type="RichTextLabel" parent="Panel/MarginContainer"]
+margin_left = 5.0
+margin_top = 5.0
+margin_right = 627.0
+margin_bottom = 329.0
 theme = ExtResource( 2 )
 bbcode_enabled = true
 scroll_active = false
@@ -44,27 +66,30 @@ __meta__ = {
 
 [node name="Button0" type="Button" parent="HBoxContainer"]
 visible = false
-margin_right = 85.0
+margin_right = 111.0
 margin_bottom = 42.0
-text = "a. atk"
+text = "action0"
 
 [node name="Button1" type="Button" parent="HBoxContainer"]
 visible = false
-margin_right = 115.0
+margin_left = 115.0
+margin_right = 222.0
 margin_bottom = 42.0
-text = "z. atk++"
+text = "action1"
 
 [node name="Button2" type="Button" parent="HBoxContainer"]
 visible = false
-margin_left = 119.0
-margin_right = 204.0
+margin_left = 226.0
+margin_right = 337.0
 margin_bottom = 42.0
-text = "e. def"
+text = "action2"
 
 [node name="Button3" type="Button" parent="HBoxContainer"]
 visible = false
-margin_right = 12.0
+margin_left = 341.0
+margin_right = 452.0
 margin_bottom = 42.0
+text = "action3"
 [connection signal="button_down" from="HBoxContainer/Button0" to="." method="_on_Button0_button_down"]
 [connection signal="button_down" from="HBoxContainer/Button1" to="." method="_on_Button1_button_down"]
 [connection signal="button_down" from="HBoxContainer/Button2" to="." method="_on_Button2_button_down"]

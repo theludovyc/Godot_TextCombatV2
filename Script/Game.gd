@@ -9,6 +9,8 @@ preload("ItemEpee.gd"),
 preload("ItemCeinture.gd"),
 preload("ItemBotte.gd")]
 
+onready var RTL = $Panel/MarginContainer/RTL
+
 onready var buttons = [$HBoxContainer/Button0,
 $HBoxContainer/Button1,
 $HBoxContainer/Button2,
@@ -38,13 +40,13 @@ var lvl:=0
 var hero_def=0
 
 func addLine():
-	$RTL.newline()
+	RTL.newline()
 	
-	if $RTL.get_line_count() > 10:
-		$RTL.remove_line(0)
+	if RTL.get_line_count() > 10:
+		RTL.remove_line(0)
 
 func addText():
-	$RTL.add_text(string_buffer.pop_back())
+	RTL.add_text(string_buffer.pop_back())
 
 func buffer_addLine(s):
 	string_buffer.push_front(s)
@@ -200,6 +202,8 @@ func todo_start():
 func _ready():
 	randomize()
 
+	buffer_addLine("Click in this area to start...")
+
 	todo_start()
 	
 	addText()
@@ -322,27 +326,27 @@ func todo():
 func todo_help():
 	match state:
 		PLAYER_ATTACK:
-			action_set("a. atk", "z. atk++", "e. def")
+			action_set("atk", "atk++", "def")
 			player_key=3
 			player_keyMax=2
 			
 		TREASURE:
 			if treasure.equip:
-				action_set_byId(0, "a.Equiper ")
+				action_set_byId(0, "Equiper ")
 			else:
-				action_set_byId(0, "a.Utiliser ")
+				action_set_byId(0, "Utiliser ")
 			
-			action_set_byId(1, "z.Laisser")
+			action_set_byId(1, "Laisser")
 			player_key=2
 			player_keyMax=1
 			
 		PLAYER_DEATH:
-			action_set("a.Prier", "z.Abandonner")
+			action_set("Prier", "Abandonner")
 			player_key=3
 			player_keyMax=2
 			
 		END:
-			action_set("a.Recommencer", "z.Quitter")
+			action_set("Recommencer", "Quitter")
 			player_key=3
 			player_keyMax=2
 
@@ -350,7 +354,7 @@ func checkMouse():
 	if Input.is_action_just_pressed("mouse_left"):
 		var mousePos = get_viewport().get_mouse_position()
 		
-		if $RTL.get_global_rect().has_point(mousePos):
+		if RTL.get_global_rect().has_point(mousePos):
 			return true
 	return false
 
@@ -358,26 +362,12 @@ func _process(delta):
 	if Input.is_action_just_pressed("ui_cancel"):
 		get_tree().quit()
 
-	if !string_buffer.empty():
-		if Input.is_action_just_pressed("ui_accept") or checkMouse():
-			addLine()
-			addText()
-		
-			if string_buffer.empty():
-				todo_help()
-	else:
-		if Input.is_action_just_pressed("MyKey_0"):
-			player_key=0
-			todo()
-		elif Input.is_action_just_pressed("MyKey_1"):
-			player_key=1
-			todo()
-		elif Input.is_action_just_pressed("MyKey_2"):
-			player_key=2
-			todo()
-		elif Input.is_action_just_pressed("MyKey_3"):
-			player_key=3
-			todo()
+	if !string_buffer.empty() and checkMouse():
+		addLine()
+		addText()
+	
+		if string_buffer.empty():
+			todo_help()
 	pass
 
 func on_button_down(i:int):
