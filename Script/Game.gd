@@ -9,6 +9,11 @@ preload("ItemEpee.gd"),
 preload("ItemCeinture.gd"),
 preload("ItemBotte.gd")]
 
+onready var buttons = [$HBoxContainer/Button0,
+$HBoxContainer/Button1,
+$HBoxContainer/Button2,
+$HBoxContainer/Button3]
+
 var string_buffer = []
 
 var hero=Player.new()
@@ -47,20 +52,25 @@ func buffer_addLine(s):
 func buffer_addText(s):
 	string_buffer[0] += s
 
-func aide_addText(s):
-	$Label11.text+=s
+func action_set0(button:Button, s:String):
+	if s != "":
+		button.text = s
+		button.visible = true
+	else:
+		button.visible = false
 
-func help_setText(s):
-	$Label11.text=s
+func action_set(s0:String, s1:String, s2:String = "", s3:String = ""):
+	var s = [s0, s1, s2, s3]
 	
-func help_addText(s):
-	$Label11.text+=s
-
-func help_setVisibiliy(b):
-	$Label11.visible=b
-
-func aide_setText(s):
-	$Label11.text=s
+	for i in range(4):
+		action_set0(buttons[i], s[i])
+	
+func action_set_byId(i:int, s:String):
+	action_set0(buttons[i], s)
+	
+func action_hide():
+	for i in range(4):
+		buttons[i].visible = false
 
 func playerDeath():
 	buffer_addLine("Vous êtes mort!")
@@ -209,7 +219,7 @@ func playerAttack():
 
 	if player_key==2:
 		hero.addDef()
-		buffer_addLine(" prépare sa défense.")
+		buffer_addText(" prépare sa défense.")
 		return false
 	
 	if player_key == 1:
@@ -219,7 +229,7 @@ func playerAttack():
 
 func todo():
 	if player_key<=player_keyMax:
-		help_setVisibiliy(false)
+		action_hide()
 		match state:
 			PLAYER_ATTACK:
 				if playerAttack():
@@ -312,40 +322,44 @@ func todo():
 func todo_help():
 	match state:
 		PLAYER_ATTACK:
-			help_setText("a.Atk z.Atk++ e.Def")
-			help_setVisibiliy(true)
+			action_set("a. atk", "z. atk++", "e. def")
 			player_key=3
 			player_keyMax=2
 			
 		TREASURE:
 			if treasure.equip:
-				help_setText("a.Equiper ")
+				action_set_byId(0, "a.Equiper ")
 			else:
-				help_setText("a.Utiliser ")
-				
-			help_addText("z.Laisser")
-			help_setVisibiliy(true)
+				action_set_byId(0, "a.Utiliser ")
+			
+			action_set_byId(1, "z.Laisser")
 			player_key=2
 			player_keyMax=1
 			
 		PLAYER_DEATH:
-			help_setText("a.Prier z.Abandonner")
-			help_setVisibiliy(true)
+			action_set("a.Prier", "z.Abandonner")
 			player_key=3
 			player_keyMax=2
 			
 		END:
-			help_setText("a.Recommencer z.Quitter")
-			help_setVisibiliy(true)
+			action_set("a.Recommencer", "z.Quitter")
 			player_key=3
 			player_keyMax=2
+
+func checkMouse():
+	if Input.is_action_just_pressed("mouse_left"):
+		var mousePos = get_viewport().get_mouse_position()
+		
+		if $RTL.get_global_rect().has_point(mousePos):
+			return true
+	return false
 
 func _process(delta):
 	if Input.is_action_just_pressed("ui_cancel"):
 		get_tree().quit()
 
 	if !string_buffer.empty():
-		if Input.is_action_just_pressed("ui_accept"):
+		if Input.is_action_just_pressed("ui_accept") or checkMouse():
 			addLine()
 			addText()
 		
@@ -365,3 +379,23 @@ func _process(delta):
 			player_key=3
 			todo()
 	pass
+
+func on_button_down(i:int):
+	if string_buffer.empty():
+		player_key=i
+		todo()
+
+func _on_Button0_button_down():
+	on_button_down(0)
+
+
+func _on_Button1_button_down():
+	on_button_down(1)
+
+
+func _on_Button2_button_down():
+	on_button_down(2)
+
+
+func _on_Button3_button_down():
+	on_button_down(3)

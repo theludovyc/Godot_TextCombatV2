@@ -7,12 +7,17 @@
 script = ExtResource( 1 )
 
 [node name="RTL" type="RichTextLabel" parent="."]
-margin_right = 632.0
-margin_bottom = 400.0
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 635.0
+margin_bottom = 339.0
 theme = ExtResource( 2 )
 bbcode_enabled = true
 scroll_active = false
 scroll_following = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Label11" type="Label" parent="."]
 margin_left = 3.0
@@ -20,3 +25,47 @@ margin_top = 362.0
 margin_right = 43.0
 margin_bottom = 398.0
 theme = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 10.0
+margin_top = -52.0
+margin_right = 10.0
+margin_bottom = -9.99997
+theme = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Button0" type="Button" parent="HBoxContainer"]
+visible = false
+margin_right = 85.0
+margin_bottom = 42.0
+text = "a. atk"
+
+[node name="Button1" type="Button" parent="HBoxContainer"]
+visible = false
+margin_right = 115.0
+margin_bottom = 42.0
+text = "z. atk++"
+
+[node name="Button2" type="Button" parent="HBoxContainer"]
+visible = false
+margin_left = 119.0
+margin_right = 204.0
+margin_bottom = 42.0
+text = "e. def"
+
+[node name="Button3" type="Button" parent="HBoxContainer"]
+visible = false
+margin_right = 12.0
+margin_bottom = 42.0
+[connection signal="button_down" from="HBoxContainer/Button0" to="." method="_on_Button0_button_down"]
+[connection signal="button_down" from="HBoxContainer/Button1" to="." method="_on_Button1_button_down"]
+[connection signal="button_down" from="HBoxContainer/Button2" to="." method="_on_Button2_button_down"]
+[connection signal="button_down" from="HBoxContainer/Button3" to="." method="_on_Button3_button_down"]
