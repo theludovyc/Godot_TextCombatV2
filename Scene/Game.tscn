@@ -6,8 +6,14 @@
 [sub_resource type="StyleBoxFlat" id=1]
 bg_color = Color( 0.47451, 0.466667, 0.447059, 1 )
 
-[node name="Game" type="Node"]
+[node name="Game" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 2 )
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Panel" type="Panel" parent="."]
 anchor_right = 1.0
@@ -33,20 +39,9 @@ margin_left = 5.0
 margin_top = 5.0
 margin_right = 627.0
 margin_bottom = 329.0
-theme = ExtResource( 2 )
 bbcode_enabled = true
 scroll_active = false
 scroll_following = true
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Label11" type="Label" parent="."]
-margin_left = 3.0
-margin_top = 362.0
-margin_right = 43.0
-margin_bottom = 398.0
-theme = ExtResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -59,7 +54,6 @@ margin_left = 10.0
 margin_top = -52.0
 margin_right = 10.0
 margin_bottom = -9.99997
-theme = ExtResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
 }

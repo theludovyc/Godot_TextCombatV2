@@ -1,4 +1,4 @@
-extends Node
+extends Control
 
 var Player=preload("EntityPlayer.gd")
 var Monster=preload("EntityMonster.gd")
