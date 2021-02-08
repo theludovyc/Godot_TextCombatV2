@@ -1,10 +1,12 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Script/Game.gd" type="Script" id=1]
 [ext_resource path="res://myTheme.tres" type="Theme" id=2]
 
 [sub_resource type="StyleBoxFlat" id=1]
 bg_color = Color( 0.47451, 0.466667, 0.447059, 1 )
+
+[sub_resource type="StyleBoxFlat" id=2]
 
 [node name="Game" type="Control"]
 anchor_right = 1.0
@@ -15,17 +17,14 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="PanelContainer" parent="."]
 anchor_right = 1.0
 margin_bottom = 334.0
 custom_styles/panel = SubResource( 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="MarginContainer" type="MarginContainer" parent="Panel"]
-anchor_right = 1.0
-anchor_bottom = 1.0
+margin_right = 632.0
+margin_bottom = 334.0
 custom_constants/margin_right = 5
 custom_constants/margin_top = 5
 custom_constants/margin_left = 5
@@ -84,7 +83,53 @@ margin_left = 341.0
 margin_right = 452.0
 margin_bottom = 42.0
 text = "action3"
+
+[node name="Stats" type="Button" parent="."]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -93.0
+margin_top = -52.0
+margin_right = -10.0
+margin_bottom = -9.99997
+toggle_mode = true
+text = "Stats"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="StatsPanel" type="PanelContainer" parent="."]
+visible = false
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -243.0
+margin_top = -218.0
+margin_bottom = -66.0
+custom_styles/panel = SubResource( 2 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="MarginContainer" type="MarginContainer" parent="StatsPanel"]
+margin_right = 243.0
+margin_bottom = 152.0
+custom_constants/margin_left = 5
+
+[node name="StatsRTL" type="RichTextLabel" parent="StatsPanel/MarginContainer"]
+margin_left = 5.0
+margin_right = 243.0
+margin_bottom = 152.0
+text = "Dégats : 000 - 000
+Force : 000
+Intel : 000
+Agility : 000"
+scroll_active = false
 [connection signal="button_down" from="HBoxContainer/Button0" to="." method="_on_Button0_button_down"]
 [connection signal="button_down" from="HBoxContainer/Button1" to="." method="_on_Button1_button_down"]
 [connection signal="button_down" from="HBoxContainer/Button2" to="." method="_on_Button2_button_down"]
 [connection signal="button_down" from="HBoxContainer/Button3" to="." method="_on_Button3_button_down"]
+[connection signal="toggled" from="Stats" to="." method="_on_Stats_toggled"]

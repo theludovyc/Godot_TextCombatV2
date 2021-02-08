@@ -74,6 +74,16 @@ func action_hide():
 	for i in range(4):
 		buttons[i].visible = false
 
+func writeStats():
+	var statsRTL = $StatsPanel/MarginContainer/StatsRTL
+	
+	statsRTL.clear()
+	
+	statsRTL.add_text("Dégats : " + str(hero.degMin) + " - " + str(hero.degMax) +
+	"\nForce : " + str(hero.fr) + 
+	"\nIntel : " + str(hero.it) + 
+	"\nAgilité : " + str(hero.ag))
+
 func playerDeath():
 	buffer_addLine("Vous êtes mort!")
 	state=PLAYER_DEATH
@@ -202,7 +212,9 @@ func todo_start():
 func _ready():
 	randomize()
 
-	buffer_addLine("Click in this area to start...")
+	buffer_addLine("Cliquez dans cette zone pour commencer...")
+
+	writeStats()
 
 	todo_start()
 	
@@ -280,6 +292,8 @@ func todo():
 					else:
 						buffer_addText(" l'utilise.")
 					treasure.use(hero)
+					
+					writeStats()
 				else:
 					buffer_addText(" continu son chemin.")
 
@@ -326,7 +340,7 @@ func todo():
 func todo_help():
 	match state:
 		PLAYER_ATTACK:
-			action_set("atk", "atk++", "def")
+			action_set("atq", "atq++", "def")
 			player_key=3
 			player_keyMax=2
 			
@@ -378,14 +392,14 @@ func on_button_down(i:int):
 func _on_Button0_button_down():
 	on_button_down(0)
 
-
 func _on_Button1_button_down():
 	on_button_down(1)
-
 
 func _on_Button2_button_down():
 	on_button_down(2)
 
-
 func _on_Button3_button_down():
 	on_button_down(3)
+
+func _on_Stats_toggled(button_pressed):
+	$StatsPanel.visible = button_pressed
